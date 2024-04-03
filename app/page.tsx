@@ -1,7 +1,8 @@
-import Image from "next/image";
+import { ApiKeys } from "@/app/secrets/api-keys";
+
 async function fetchdetails() {
   const response = await fetch(
-    "https://api.openweathermap.org/data/2.5/weather?lat=39.401859&lon=-76.605049&appid=3bbec2d74ab6332227fe9d12b077e2d1"
+    `https://api.openweathermap.org/data/2.5/weather?lat=39.401859&lon=-76.605049&appid=${ApiKeys['open_weather_map']}`
   );
 
   console.log(response);
