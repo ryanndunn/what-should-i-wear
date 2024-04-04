@@ -1,24 +1,39 @@
 import { ApiKeys } from "@/app/secrets/api-keys";
 
-async function fetchdetails() {
-  const response = await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?lat=39.401859&lon=-76.605049&appid=${ApiKeys['open_weather_map']}`
+async function fetchWeather() {
+
+  const pointsResponse = await fetch(
+    `https://api.weather.gov/points/39.401859,-76.605049`
   );
 
-  console.log(response);
-  if (response.ok) {
-    const responseBody = await response.json();
-    // console.log(`data ${data}`);
-    // setData(responseBody);
-    //console.log(`data ${responseBody}`);
-    return responseBody;
+  if (pointsResponse.ok) {
+    
+    const pointsResponseBody = await pointsResponse.json();
+    const gridId = pointsResponseBody.properties.gridId;
+    const gridX = pointsResponseBody.properties.gridX;
+    const gridY = pointsResponseBody.properties.gridY;
+
+    const response = await fetch(
+      `https://api.weather.gov/gridpoints/${gridId}/${gridX},${gridY}/forecast`
+    );
+    
+      if (response.ok) {
+
+        const responseBody = await response.json();
+
+        return responseBody;
+
+      }
   }
 }
-// eslint-disable-next-line @next/next/no-async-client-component
-export default async function Home() {
-  const data = await fetchdetails();
 
-  console.log(data);
+export default async function Home() {
+  const data = await fetchWeather();
+
+  console.log(data.properties);
+  console.log(data.properties.periods[0].probabilityOfPrecipitation);
+  console.log(data.properties.periods[0].dewpoint);
+  console.log(data.properties.periods[0].relativeHumidity);
 
   return (
     <main className="font-poppins mx-10">
