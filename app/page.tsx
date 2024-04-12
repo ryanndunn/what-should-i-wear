@@ -10,6 +10,48 @@ export default function Home() {
   const [govWeather, setGovWeather] = useState({});
   const [openWeatherCurrent, setOpenWeatherCurrent] = useState({});
   const [openWeather5Day, setOpenWeather5Day] = useState({});
+  const [tempRating, setTempRating] = useState(false);
+  const [humidityRating, setHumidityRating] = useState(false);
+  const [rainRating, setRainRating] = useState(false);
+
+  useEffect(() => {
+
+    //openWeather Rain Data
+    const openWeather = Object.keys(openWeatherCurrent).length === 0 ? false : openWeatherCurrent;
+    const govWeatherStart = Object.keys(govWeather).length === 0 ? false : govWeather.properties.periods[0].startTime;
+    const govWeatherEnd = Object.keys(govWeather).length === 0 ? false : govWeather.properties.periods[0].endTime;
+    const govWeatherPrecipitation = Object.keys(govWeather).length === 0 ? false : govWeather.properties.periods[0].probabilityOfPrecipitation.value;
+
+    if(govWeatherStart){
+
+      //gov rain rating
+      const govWeatherStartStamp = new Date(govWeatherStart).getTime();
+      const govWeatherEndStamp = new Date(govWeatherEnd).getTime();
+      const govWeatherPeriodHours = (govWeatherEndStamp - govWeatherStartStamp) / 1000 / 60 / 60;
+      const calcGovRainRating = (((govWeatherPrecipitation / govWeatherPeriodHours) + govWeatherPrecipitation) / 200) * 100;
+
+      let calcRainRating = calcGovRainRating;
+      
+      //openweather rain rating
+      if(openWeather.rain !== undefined){
+        const rainMM = openWeather.rain['1h'];
+        const calcOpenRainRating = (rainMM > 10 ? 100 : openWeather.rain['1h'] * 3) + 70;
+        calcRainRating = govWeatherPeriodHours >= 3 ? (govWeatherPrecipitation + calcOpenRainRating) / 2 : (calcGovRainRating + govWeatherPrecipitation + calcOpenRainRating) / 3;
+        console.log(calcGovRainRating);
+        console.log(calcOpenRainRating);
+        console.log(govWeatherPrecipitation);
+        console.log(rainMM);
+        console.log(govWeatherPeriodHours);
+      }
+
+      
+      setRainRating(calcRainRating);
+
+    }
+
+
+
+  },[govWeather,openWeatherCurrent]);
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
@@ -65,6 +107,19 @@ export default function Home() {
           if (response.ok) {
             const responseBody = await response.json();
             setOpenWeatherCurrent(responseBody);
+            
+            //temp rating
+            const temp = responseBody.main.feels_like;
+            const tempLow = 32;
+            const tempHigh = 100;
+            const newTempRating = (temp - tempLow)/(tempHigh - tempLow);
+            setTempRating(newTempRating);
+
+            //humidity rating
+            const humidity = responseBody.main.humidity;
+            setHumidityRating(humidity);
+
+
             return responseBody;
           }
         }
@@ -91,10 +146,10 @@ export default function Home() {
     fetchWeatherData();
   };
 
-  console.log(zipData);
-  console.log(govWeather);
-  console.log(openWeatherCurrent);
-  console.log(openWeather5Day);
+  //console.log(zipData);
+  //console.log(govWeather);
+  //console.log(openWeatherCurrent);
+  //console.log(openWeather5Day);
 
   return (
     <main className="font-poppins mx-10">
@@ -108,9 +163,19 @@ export default function Home() {
       </form>
 
       <p>What Should I Wear Today?</p>
+
+      <p>Outside right now</p>
+
+      <h3>Feels Like: { Object.keys(openWeatherCurrent).length === 0 ? '' : openWeatherCurrent.main.feels_like }</h3>
+      <h3>Temp Rating: { tempRating === false ? 'no rating' : tempRating }</h3>
+      <h3>Humidity Rating: { humidityRating === false ? 'no rating' : humidityRating }</h3>
+      <h3>Rain Rating: { rainRating === false ? 'no rating' : rainRating }</h3>
+
       <p>Outside for a few hours</p>
-      <h3>High: { Object.keys(openWeatherCurrent).length === 0 ? '' : openWeatherCurrent.main.temp_max }</h3>
-      <h3>Low: { Object.keys(openWeatherCurrent).length === 0 ? '' : openWeatherCurrent.main.temp_min }</h3>
+
+      <h3>Gov Weather This Period Start Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].startTime }</h3>
+      <h3>Gov Weather This Period End Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].endTime }</h3>
+      <h3>Gov Weather This Period Percent Chance of Rain: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].probabilityOfPrecipitation.value }</h3>
       
     </main>
   );
