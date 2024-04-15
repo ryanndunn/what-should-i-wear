@@ -10,9 +10,20 @@ export default function Home() {
   const [govWeather, setGovWeather] = useState({});
   const [openWeatherCurrent, setOpenWeatherCurrent] = useState({});
   const [openWeather5Day, setOpenWeather5Day] = useState({});
+  const [clothesMan, setClothesMan] = useState({
+    head: false
+  });
+
+  //weather ratings
   const [tempRating, setTempRating] = useState(false);
   const [humidityRating, setHumidityRating] = useState(false);
   const [rainRating, setRainRating] = useState(false);
+  const [cloudRating, setCloudRating] = useState(false);
+  const [windRating, setWindRating] = useState(false);
+
+
+
+  //
 
   useEffect(() => {
 
@@ -35,17 +46,73 @@ export default function Home() {
       //openweather rain rating
       if(openWeather.rain !== undefined){
         const rainMM = openWeather.rain['1h'];
-        const calcOpenRainRating = (rainMM > 10 ? 100 : openWeather.rain['1h'] * 3) + 70;
+        const calcOpenRainRating = (rainMM > 10 ? 100 : openWeather.rain['1h'] * 2) + 80;
         calcRainRating = govWeatherPeriodHours >= 3 ? (govWeatherPrecipitation + calcOpenRainRating) / 2 : (calcGovRainRating + govWeatherPrecipitation + calcOpenRainRating) / 3;
-        console.log(calcGovRainRating);
-        console.log(calcOpenRainRating);
-        console.log(govWeatherPrecipitation);
-        console.log(rainMM);
-        console.log(govWeatherPeriodHours);
+        // console.log(calcGovRainRating);
+        // console.log(calcOpenRainRating);
+        // console.log(govWeatherPrecipitation);
+        // console.log(rainMM);
+        // console.log(govWeatherPeriodHours);
       }
 
       
       setRainRating(calcRainRating);
+
+    }
+
+    //gear ratings
+      //head
+        //hat - sunny, not too windy, not too cold
+        //beanie - cold/snowing - 40 and below or windy or cloudy to 55
+        //nothing - cloudy, nice temp
+
+      //top
+        //t-shirt - 70 and above
+        //long sleeve shirt - 55 - 70
+        //light jacket - 55 - 70 or cloudy and windy combo
+        //rain jacket - 45 - 75 and raining above 50%
+        //winter coat - 45 and below
+
+      //bottom
+        //shorts - 70 and above
+        //pants - 70 and below
+        //long johns - freezing
+
+
+    if(tempRating !== false && humidityRating !== false && rainRating !== false && cloudRating !== false && windRating !== false){ console.log('all set');
+
+      let hat = false;
+      let setHead = false;
+      
+      if(windRating < 20){console.log('wind less than 20');
+        if(openWeather.main.feels_like > 40){
+          hat = 10;
+
+          if(cloudRating < 30){
+            hat = 20;
+
+            if(openWeather.main.feels_like > 80){
+              hat = 30;
+            }
+          }
+        }
+      }
+
+      console.log(hat);
+
+      if(hat){
+        if(hat == 10){ setHead = 'A hat would be ok to wear.'}
+        if(hat == 20){ setHead = 'You should wear a hat today to block out the sun.'}
+        if(hat == 30){ setHead = 'You should wear a hat today to block out the sun. It is hot right now, maybe a hat with mesh lining to keep breathable.'}
+      }
+
+
+      
+      setClothesMan({
+        head: setHead ? setHead : 'nothing on head'
+      });
+
+      console.log(clothesMan);
 
     }
 
@@ -107,17 +174,28 @@ export default function Home() {
           if (response.ok) {
             const responseBody = await response.json();
             setOpenWeatherCurrent(responseBody);
+
+            console.log(responseBody);
             
             //temp rating
             const temp = responseBody.main.feels_like;
-            const tempLow = 32;
-            const tempHigh = 100;
+            const tempLow = 10;
+            const tempHigh = 110;
             const newTempRating = (temp - tempLow)/(tempHigh - tempLow);
             setTempRating(newTempRating);
 
             //humidity rating
             const humidity = responseBody.main.humidity;
             setHumidityRating(humidity);
+
+            //cloud rating
+            const clouds = responseBody.clouds.all;
+            setCloudRating(clouds);
+
+            //wind rating
+            const windSpeed = responseBody.wind.speed;
+            const windGust = responseBody.wind.gust === undefined ? windSpeed : responseBody.wind.gust;
+            setWindRating((windSpeed + windGust) / 2);
 
 
             return responseBody;
@@ -170,8 +248,13 @@ export default function Home() {
       <h3>Temp Rating: { tempRating === false ? 'no rating' : tempRating }</h3>
       <h3>Humidity Rating: { humidityRating === false ? 'no rating' : humidityRating }</h3>
       <h3>Rain Rating: { rainRating === false ? 'no rating' : rainRating }</h3>
+      <h3>Cloud Rating: { cloudRating === false ? 'no rating' : cloudRating }</h3>
+      <h3>Wind Rating: { windRating === false ? 'no rating' : windRating }</h3>
 
       <p>Outside for a few hours</p>
+
+      <h3>As a man, I would wear:</h3>
+      <h3>Head: { clothesMan.head ? clothesMan.head : 'nothing on head' }</h3>
 
       <h3>Gov Weather This Period Start Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].startTime }</h3>
       <h3>Gov Weather This Period End Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].endTime }</h3>
