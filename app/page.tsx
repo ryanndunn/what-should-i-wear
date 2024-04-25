@@ -11,7 +11,8 @@ export default function Home() {
   const [openWeatherCurrent, setOpenWeatherCurrent] = useState({});
   const [openWeather5Day, setOpenWeather5Day] = useState({});
   const [clothesMan, setClothesMan] = useState({
-    head: false
+    head: false,
+    eyes: false,
   });
 
   //weather ratings
@@ -84,7 +85,7 @@ export default function Home() {
       let hat = false;
       let setHead = false;
       
-      if(windRating < 20){console.log('wind less than 20');
+      if(windRating < 20 && govWeather.properties.periods[0].isDaytime){console.log('wind less than 20');
         if(openWeather.main.feels_like > 40){
           hat = 10;
 
@@ -98,18 +99,36 @@ export default function Home() {
         }
       }
 
-      console.log(hat);
-
       if(hat){
-        if(hat == 10){ setHead = 'A hat would be ok to wear.'}
-        if(hat == 20){ setHead = 'You should wear a hat today to block out the sun.'}
-        if(hat == 30){ setHead = 'You should wear a hat today to block out the sun. It is hot right now, maybe a hat with mesh lining to keep breathable.'}
+        if(hat == 10){ setHead = 'A hat would be ok to wear.'; }
+        if(hat == 20){ setHead = 'You should wear a hat today to block out the sun.'; }
+        if(hat == 30){ setHead = 'You should wear a hat today to block out the sun. It is hot right now, maybe a hat with mesh lining to keep breathable.'; }
+      }
+
+      let sunglasses = false;
+      let setEyes = false;
+
+      if(cloudRating < 80 && govWeather.properties.periods[0].isDaytime){
+        sunglasses = 10;
+        if(cloudRating < 50){
+          sunglasses = 20;
+          if(cloudRating < 20){
+            sunglasses = 30;
+          }
+        }
+      }
+
+      if(sunglasses){
+        if(sunglasses == 10){ setEyes = 'It is kinda cloudy, but sunglasses would be nice.'; }
+        if(sunglasses == 20){ setEyes = 'It is a little cloudy, but you should probably wear sunglasses.'; }
+        if(sunglasses == 30){ setEyes = 'It is sunny, sunglasses would be a good bet.'; }
       }
 
 
       
       setClothesMan({
-        head: setHead ? setHead : 'nothing on head'
+        head: setHead ? setHead : 'nothing on head',
+        eyes: setEyes ? setEyes : 'nothing on eyes'
       });
 
       console.log(clothesMan);
@@ -254,7 +273,8 @@ export default function Home() {
       <p>Outside for a few hours</p>
 
       <h3>As a man, I would wear:</h3>
-      <h3>Head: { clothesMan.head ? clothesMan.head : 'nothing on head' }</h3>
+      <h3>Head: { clothesMan.head }</h3>
+      <h3>Eyes: { clothesMan.eyes }</h3>
 
       <h3>Gov Weather This Period Start Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].startTime }</h3>
       <h3>Gov Weather This Period End Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].endTime }</h3>
