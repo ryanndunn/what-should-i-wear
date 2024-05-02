@@ -1,38 +1,83 @@
 "use client";
 
 import React, { useEffect, useState, SyntheticEvent } from 'react';
-import { ApiKeys } from "@/app/secrets/api-keys";
+import { fetchWeatherData } from '@/app/lib/data';
 
-export default function Home() {
+export default function Page() {
 
+  //weather data
   const [zip, setZip] = useState("");
-  const [zipData, setZipData] = useState({});
-  const [govWeather, setGovWeather] = useState({});
-  const [openWeatherCurrent, setOpenWeatherCurrent] = useState({});
-  const [openWeather5Day, setOpenWeather5Day] = useState({});
-  const [clothesMan, setClothesMan] = useState({
-    head: false,
-    eyes: false,
+  const [govWeather, setGovWeather] = useState({
+    properties: {
+      periods: [
+        {
+          startTime: "",
+          endTime: "",
+          probabilityOfPrecipitation: {
+            value: 0
+          },
+          isDaytime: true
+        }
+      ]
+    }
   });
+  const [openWeatherCurrent, setOpenWeatherCurrent] = useState({
+    main: {
+      feels_like: 0,
+      humidity: 0
+    },
+    clouds: {
+      all: 0
+    },
+    wind: {
+      speed: 0,
+      gust: 0
+    },
+    rain: {
+      "1h": 0
+    }
+  });
+  const [openWeather5Day, setOpenWeather5Day] = useState({});
 
   //weather ratings
-  const [tempRating, setTempRating] = useState(false);
-  const [humidityRating, setHumidityRating] = useState(false);
-  const [rainRating, setRainRating] = useState(false);
-  const [cloudRating, setCloudRating] = useState(false);
-  const [windRating, setWindRating] = useState(false);
+  const [tempRating, setTempRating] = useState(0);
+  const [humidityRating, setHumidityRating] = useState(0);
+  const [rainRating, setRainRating] = useState(0);
+  const [cloudRating, setCloudRating] = useState(0);
+  const [windRating, setWindRating] = useState(0);
 
-
-
-  //
+  //clothes objects
+  const [clothesMan, setClothesMan] = useState({
+    head: "",
+    eyes: "",
+  });
 
   useEffect(() => {
 
+    //temp rating
+    const temp = openWeatherCurrent.main.feels_like;
+    const tempLow = 10;
+    const tempHigh = 110;
+    const newTempRating = temp == 0 ? 0 : (temp - tempLow)/(tempHigh - tempLow);
+    setTempRating(newTempRating);
+
+    //humidity rating
+    const humidity = openWeatherCurrent.main.humidity;
+    setHumidityRating(humidity);
+
+    //cloud rating
+    const clouds = openWeatherCurrent.clouds.all;
+    setCloudRating(clouds);
+
+    //wind rating
+    const windSpeed = openWeatherCurrent.wind.speed;
+    const windGust = openWeatherCurrent.wind.gust === undefined ? windSpeed : openWeatherCurrent.wind.gust;
+    setWindRating((windSpeed + windGust) / 2);
+
     //openWeather Rain Data
-    const openWeather = Object.keys(openWeatherCurrent).length === 0 ? false : openWeatherCurrent;
-    const govWeatherStart = Object.keys(govWeather).length === 0 ? false : govWeather.properties.periods[0].startTime;
-    const govWeatherEnd = Object.keys(govWeather).length === 0 ? false : govWeather.properties.periods[0].endTime;
-    const govWeatherPrecipitation = Object.keys(govWeather).length === 0 ? false : govWeather.properties.periods[0].probabilityOfPrecipitation.value;
+    const govWeatherStart = govWeather.properties.periods[0].startTime;
+    const govWeatherEnd = govWeather.properties.periods[0].endTime;
+    const govWeatherPrecipitation = govWeather.properties.periods[0].probabilityOfPrecipitation.value;
 
     if(govWeatherStart){
 
@@ -45,15 +90,10 @@ export default function Home() {
       let calcRainRating = calcGovRainRating;
       
       //openweather rain rating
-      if(openWeather.rain !== undefined){
-        const rainMM = openWeather.rain['1h'];
-        const calcOpenRainRating = (rainMM > 10 ? 100 : openWeather.rain['1h'] * 2) + 80;
+      if(openWeatherCurrent.rain !== undefined){
+        const rainMM = openWeatherCurrent.rain['1h'];
+        const calcOpenRainRating = (rainMM > 10 ? 100 : openWeatherCurrent.rain['1h'] * 2) + 80;
         calcRainRating = govWeatherPeriodHours >= 3 ? (govWeatherPrecipitation + calcOpenRainRating) / 2 : (calcGovRainRating + govWeatherPrecipitation + calcOpenRainRating) / 3;
-        // console.log(calcGovRainRating);
-        // console.log(calcOpenRainRating);
-        // console.log(govWeatherPrecipitation);
-        // console.log(rainMM);
-        // console.log(govWeatherPeriodHours);
       }
 
       
@@ -80,19 +120,18 @@ export default function Home() {
         //long johns - freezing
 
 
-    if(tempRating !== false && humidityRating !== false && rainRating !== false && cloudRating !== false && windRating !== false){ console.log('all set');
+    if(zip !== ""){
 
-      let hat = false;
-      let setHead = false;
+      //head gear
+      let hat = 0;
+      let setHead = "";
       
-      if(windRating < 20 && govWeather.properties.periods[0].isDaytime){console.log('wind less than 20');
-        if(openWeather.main.feels_like > 40){
+      if(windRating < 20 && govWeather.properties.periods[0].isDaytime){
+        if(openWeatherCurrent.main.feels_like > 40){
           hat = 10;
-
           if(cloudRating < 30){
             hat = 20;
-
-            if(openWeather.main.feels_like > 80){
+            if(openWeatherCurrent.main.feels_like > 80){
               hat = 30;
             }
           }
@@ -105,8 +144,9 @@ export default function Home() {
         if(hat == 30){ setHead = 'You should wear a hat today to block out the sun. It is hot right now, maybe a hat with mesh lining to keep breathable.'; }
       }
 
-      let sunglasses = false;
-      let setEyes = false;
+      //eyes gear
+      let sunglasses = 0;
+      let setEyes = "";
 
       if(cloudRating < 80 && govWeather.properties.periods[0].isDaytime){
         sunglasses = 10;
@@ -123,12 +163,10 @@ export default function Home() {
         if(sunglasses == 20){ setEyes = 'It is a little cloudy, but you should probably wear sunglasses.'; }
         if(sunglasses == 30){ setEyes = 'It is sunny, sunglasses would be a good bet.'; }
       }
-
-
       
       setClothesMan({
-        head: setHead ? setHead : 'nothing on head',
-        eyes: setEyes ? setEyes : 'nothing on eyes'
+        head: setHead,
+        eyes: setEyes
       });
 
       console.log(clothesMan);
@@ -140,113 +178,17 @@ export default function Home() {
   },[govWeather,openWeatherCurrent]);
 
   const handleSubmit = (e: SyntheticEvent) => {
+    
     e.preventDefault();
 
+    //getting/setting weather data
+    fetchWeatherData(zip).then((weatherData) => {
+      setGovWeather(weatherData.govWeather);
+      setOpenWeatherCurrent(weatherData.openWeatherCurrent);
+      setOpenWeather5Day(weatherData.openWeather5Day);
+    });
 
-    async function fetchWeatherData() {
-      
-      //get zip coords
-      const response = await fetch(
-        `http://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${ApiKeys['open_weather_map']}`
-      );
-    
-      if (response.ok) {
-        const responseBody = await response.json();
-        setZipData(responseBody);
-
-        const lat = responseBody.lat;
-        const lon = responseBody.lon;
-
-        const fetchGovWeather = async function(lat: number,lon: number) {
-
-          const pointsResponse = await fetch(
-            `https://api.weather.gov/points/${lat},${lon}`
-          );
-        
-          if (pointsResponse.ok) {
-            
-            const pointsResponseBody = await pointsResponse.json();
-            const gridId = pointsResponseBody.properties.gridId;
-            const gridX = pointsResponseBody.properties.gridX;
-            const gridY = pointsResponseBody.properties.gridY;
-        
-            const response = await fetch(
-              `https://api.weather.gov/gridpoints/${gridId}/${gridX},${gridY}/forecast`
-            );
-            
-              if (response.ok) {
-        
-                const responseBody = await response.json();
-                setGovWeather(responseBody);
-        
-                return responseBody;
-        
-              }
-          }
-        }
-
-
-        const fetchOpenWeatherCurrent =  async function(lat: number,lon: number) {
-          const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${ApiKeys['open_weather_map']}`
-          );
-          if (response.ok) {
-            const responseBody = await response.json();
-            setOpenWeatherCurrent(responseBody);
-
-            console.log(responseBody);
-            
-            //temp rating
-            const temp = responseBody.main.feels_like;
-            const tempLow = 10;
-            const tempHigh = 110;
-            const newTempRating = (temp - tempLow)/(tempHigh - tempLow);
-            setTempRating(newTempRating);
-
-            //humidity rating
-            const humidity = responseBody.main.humidity;
-            setHumidityRating(humidity);
-
-            //cloud rating
-            const clouds = responseBody.clouds.all;
-            setCloudRating(clouds);
-
-            //wind rating
-            const windSpeed = responseBody.wind.speed;
-            const windGust = responseBody.wind.gust === undefined ? windSpeed : responseBody.wind.gust;
-            setWindRating((windSpeed + windGust) / 2);
-
-
-            return responseBody;
-          }
-        }
-
-        const fetchOpenWeather5Day =  async function(lat: number,lon: number) {
-          const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${ApiKeys['open_weather_map']}`
-          );
-          if (response.ok) {
-            const responseBody = await response.json();
-            setOpenWeather5Day(responseBody);
-            return responseBody;
-          }
-        }
-
-        const govWeather = fetchGovWeather(lat,lon);
-        const openWeatherCurrent = fetchOpenWeatherCurrent(lat,lon);
-        const openWeather5Day = fetchOpenWeather5Day(lat,lon);
-
-        return responseBody;
-      }
-    }
-
-    fetchWeatherData();
   };
-
-  //console.log(zipData);
-  //console.log(govWeather);
-  //console.log(openWeatherCurrent);
-  //console.log(openWeather5Day);
 
   return (
     <main className="font-poppins mx-10">
@@ -263,22 +205,22 @@ export default function Home() {
 
       <p>Outside right now</p>
 
-      <h3>Feels Like: { Object.keys(openWeatherCurrent).length === 0 ? '' : openWeatherCurrent.main.feels_like }</h3>
-      <h3>Temp Rating: { tempRating === false ? 'no rating' : tempRating }</h3>
-      <h3>Humidity Rating: { humidityRating === false ? 'no rating' : humidityRating }</h3>
-      <h3>Rain Rating: { rainRating === false ? 'no rating' : rainRating }</h3>
-      <h3>Cloud Rating: { cloudRating === false ? 'no rating' : cloudRating }</h3>
-      <h3>Wind Rating: { windRating === false ? 'no rating' : windRating }</h3>
+      <h3>Feels Like: { zip === "" ? 'Zip Not Set' : openWeatherCurrent.main.feels_like }</h3>
+      <h3>Temp Rating: { zip === "" ? 'Zip Not Set' : tempRating }</h3>
+      <h3>Humidity Rating: { zip === "" ? 'Zip Not Set' : humidityRating }</h3>
+      <h3>Rain Rating: { zip === "" ? 'Zip Not Set' : rainRating }</h3>
+      <h3>Cloud Rating: { zip === "" ? 'Zip Not Set' : cloudRating }</h3>
+      <h3>Wind Rating: { zip === "" ? 'Zip Not Set' : windRating }</h3>
 
       <p>Outside for a few hours</p>
 
       <h3>As a man, I would wear:</h3>
-      <h3>Head: { clothesMan.head }</h3>
-      <h3>Eyes: { clothesMan.eyes }</h3>
+      <h3>Head: { zip === "" ? 'Zip Not Set' : clothesMan.head }</h3>
+      <h3>Eyes: { zip === "" ? 'Zip Not Set' : clothesMan.eyes }</h3>
 
-      <h3>Gov Weather This Period Start Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].startTime }</h3>
-      <h3>Gov Weather This Period End Time: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].endTime }</h3>
-      <h3>Gov Weather This Period Percent Chance of Rain: { Object.keys(govWeather).length === 0 ? '' : govWeather.properties.periods[0].probabilityOfPrecipitation.value }</h3>
+      <h3>Gov Weather This Period Start Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].startTime }</h3>
+      <h3>Gov Weather This Period End Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].endTime }</h3>
+      <h3>Gov Weather This Period Percent Chance of Rain: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].probabilityOfPrecipitation.value }</h3>
       
     </main>
   );
