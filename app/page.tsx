@@ -50,31 +50,32 @@ export default function Page() {
   const [clothesMan, setClothesMan] = useState({
     head: "",
     eyes: "",
+    neck: "",
   });
 
   useEffect(() => {
 
-    //temp rating
+    //temp rating (percentage rating)
     const temp = openWeatherCurrent.main.feels_like;
     const tempLow = 10;
     const tempHigh = 110;
-    const newTempRating = temp == 0 ? 0 : (temp - tempLow)/(tempHigh - tempLow);
+    const newTempRating = temp == 0 ? 0 : ((temp - tempLow)/(tempHigh - tempLow)) * 100;
     setTempRating(newTempRating);
 
-    //humidity rating
+    //humidity rating (humidity percentage)
     const humidity = openWeatherCurrent.main.humidity;
     setHumidityRating(humidity);
 
-    //cloud rating
+    //cloud rating (percent cloudiness)
     const clouds = openWeatherCurrent.clouds.all;
     setCloudRating(clouds);
 
-    //wind rating
+    //wind rating (wind speed, accounting for gust)
     const windSpeed = openWeatherCurrent.wind.speed;
-    const windGust = openWeatherCurrent.wind.gust === undefined ? windSpeed : openWeatherCurrent.wind.gust;
+    const windGust = openWeatherCurrent.wind.gust > 0 || openWeatherCurrent.wind.gust === undefined ? windSpeed : openWeatherCurrent.wind.gust;
     setWindRating((windSpeed + windGust) / 2);
 
-    //openWeather Rain Data
+    //openWeather Rain Data (is it raining right now?)
     const govWeatherStart = govWeather.properties.periods[0].startTime;
     const govWeatherEnd = govWeather.properties.periods[0].endTime;
     const govWeatherPrecipitation = govWeather.properties.periods[0].probabilityOfPrecipitation.value;
@@ -163,12 +164,35 @@ export default function Page() {
         if(sunglasses == 20){ setEyes = 'It is a little cloudy, but you should probably wear sunglasses.'; }
         if(sunglasses == 30){ setEyes = 'It is sunny, sunglasses would be a good bet.'; }
       }
+
+      //neck gear
+      let scarf = 0;
+      let setNeck = "";
+
+      if(openWeatherCurrent.main.feels_like < 40){
+        scarf = 10;
+        if(windRating > 12){
+          scarf = 20;
+          if(cloudRating > 20){
+            scarf = 30;
+          }
+        }
+      }
+
+      if(scarf){
+        if(scarf == 10){ setNeck = 'It is cold, but not that windy. a scarf would be nice'; }
+        if(scarf == 20){ setNeck = 'It is cold and windy, a scarf would be recommended'; }
+        if(scarf == 30){ setNeck = 'It is cold and very windy, a scarf would be a good bet.'; }
+      }
       
       setClothesMan({
         head: setHead,
-        eyes: setEyes
+        eyes: setEyes,
+        neck: setNeck
       });
 
+      console.log(govWeather);
+      console.log(openWeatherCurrent);
       console.log(clothesMan);
 
     }
@@ -217,6 +241,7 @@ export default function Page() {
       <h3>As a man, I would wear:</h3>
       <h3>Head: { zip === "" ? 'Zip Not Set' : clothesMan.head }</h3>
       <h3>Eyes: { zip === "" ? 'Zip Not Set' : clothesMan.eyes }</h3>
+      <h3>Neck: { zip === "" ? 'Zip Not Set' : clothesMan.scarf }</h3>
 
       <h3>Gov Weather This Period Start Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].startTime }</h3>
       <h3>Gov Weather This Period End Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].endTime }</h3>
