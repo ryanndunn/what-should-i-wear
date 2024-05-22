@@ -51,6 +51,7 @@ export default function Page() {
     head: "",
     eyes: "",
     neck: "",
+    top: ""
   });
 
   useEffect(() => {
@@ -113,7 +114,8 @@ export default function Page() {
         //long sleeve shirt - 55 - 70
         //light jacket - 55 - 70 or cloudy and windy combo
         //rain jacket - 45 - 75 and raining above 50%
-        //winter coat - 45 and below
+        //heavy jacket - 40 - 55
+        //winter coat - 40 and below, 50 and below if windy, 55 and below if raining
 
       //bottom
         //shorts - 70 and above
@@ -184,11 +186,104 @@ export default function Page() {
         if(scarf == 20){ setNeck = 'It is cold and windy, a scarf would be recommended'; }
         if(scarf == 30){ setNeck = 'It is cold and very windy, a scarf would be a good bet.'; }
       }
+
+      //top gear
+      let tShirt,longShirt,heavyJacket,rainJacket,winterCoat,noShirt = 0;
+      let setTop = "";
+
+      if(openWeatherCurrent.main.feels_like > 70){
+        tShirt = 10;
+
+        if(rainRating > 50){
+
+          rainJacket = 10;
+
+          if(openWeatherCurrent.main.feels_like > 80){
+            noShirt = 10;
+          }
+
+        } else {
+
+          if(openWeatherCurrent.main.feels_like < 80 && windRating > 12 && cloudRating > 50){
+            longShirt = 10;
+          }
+
+        }
+      } else {
+
+        if(rainRating > 50){
+
+          rainJacket = 20;
+
+          if(openWeatherCurrent.main.feels_like < 55){
+            winterCoat = 10;
+
+            if(openWeatherCurrent.main.feels_like < 33){
+              winterCoat = 20;
+            }
+          }
+
+        } else {
+          
+          tShirt = 0;
+          longShirt = 10;
+
+          if(openWeatherCurrent.main.feels_like < 55){
+            longShirt = 0;
+            heavyJacket = 10;
+
+            if(openWeatherCurrent.main.feels_like < 50 && windRating > 12){
+              winterCoat = 10;
+              rainJacket = 0;
+            }
+
+            if(openWeatherCurrent.main.feels_like < 40){
+              winterCoat = 10;
+              rainJacket = 0;
+
+              if(openWeatherCurrent.main.feels_like < 33){
+                winterCoat = 20;
+              }
+
+            }
+          }
+        
+        }
+        
+      }
+
+      if(top){
+        if(noShirt == 10){ 
+          setTop = 'It is super hot and rainy, time to get in swim gear'; 
+        } else {
+
+          if(rainRating > 50){
+
+            if(rainJacket == 10){ setTop = 'It is raining but not too cold. A rain jacket would be a good idea.';  }
+            if(rainJacket == 20){ setTop = 'It is raining and cold. A rain jacket would be a good idea with a long sleeve layer underneath.';  }
+            
+            if(winterCoat == 10){ setTop = 'It is cold and raining. A waterproof (or resistant) winter coat would be ideal.'; }
+            if(winterCoat == 20){ setTop = 'It is below freezing. A waterproof (or resistant) winter coat is necesary.'; }
+
+          } else {
+
+            if(tShirt == 10){ setTop = 'It is a nice day out. A t-shirt will do.';  }
+            if(longShirt == 10){ setTop = 'It is a little colder, a long sleeve shirt or a t shirt and light jacket will be fine.'; }
+            if(heavyJacket == 10){ setTop = 'It is cold. A heavy jacket with a layer underneath would be a good idea.'; }
+            if(winterCoat == 10){ setTop = 'It is pretty cold out. A winter coat would be ideal.'; }
+            if(winterCoat == 20){ setTop = 'It is below freezing. A winter coat is necesary.'; }
+
+          }
+
+        }
+        
+      }
       
       setClothesMan({
         head: setHead,
         eyes: setEyes,
-        neck: setNeck
+        neck: setNeck,
+        top: setTop
       });
 
       console.log(govWeather);
@@ -241,7 +336,8 @@ export default function Page() {
       <h3>As a man, I would wear:</h3>
       <h3>Head: { zip === "" ? 'Zip Not Set' : clothesMan.head }</h3>
       <h3>Eyes: { zip === "" ? 'Zip Not Set' : clothesMan.eyes }</h3>
-      <h3>Neck: { zip === "" ? 'Zip Not Set' : clothesMan.scarf }</h3>
+      <h3>Neck: { zip === "" ? 'Zip Not Set' : clothesMan.neck }</h3>
+      <h3>Top: { zip === "" ? 'Zip Not Set' : clothesMan.top }</h3>
 
       <h3>Gov Weather This Period Start Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].startTime }</h3>
       <h3>Gov Weather This Period End Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].endTime }</h3>
