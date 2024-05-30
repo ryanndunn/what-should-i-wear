@@ -51,7 +51,8 @@ export default function Page() {
     head: "",
     eyes: "",
     neck: "",
-    top: ""
+    top: "",
+    bottom: ""
   });
 
   useEffect(() => {
@@ -252,10 +253,9 @@ export default function Page() {
         
       }
 
-      if(top){
-        if(noShirt == 10){ 
+      if(noShirt == 10){ 
           setTop = 'It is super hot and rainy, time to get in swim gear'; 
-        } else {
+      } else {
 
           if(rainRating > 50){
 
@@ -275,15 +275,57 @@ export default function Page() {
 
           }
 
-        }
-        
       }
+        
+      
+
+      //bottom gear
+      let shorts,pants,trunks,longJohns = 0;
+      let setBottom = "";
+
+      if(openWeatherCurrent.main.feels_like > 70){
+        shorts = 10;
+        if(rainRating > 85){
+          shorts = 0;
+          trunks = 10;
+        }
+      } else {
+        pants = 10;
+
+        if(openWeatherCurrent.main.feels_like < 50){
+          pants = 20;
+        }
+
+        if(openWeatherCurrent.main.feels_like < 35){
+          pants = 0;
+          longJohns = 10;
+        }
+      }
+
+      if(shorts){ 
+        if(shorts == 10){ setBottom = 'It is a nice day out. Put some shorts on.'; }
+      }
+
+      if(trunks){ 
+        if(trunks == 10){ setBottom = 'It is a warm, but raining. Put some swim trunks on or shorts you don\'t mind getting wet.'; }
+      }
+
+      if(pants){ 
+        if(pants == 10){ setBottom = 'It is a little chilly, put some pants on.'; }
+        if(pants == 20){ setBottom = 'It is a pretty chilly, put some pants on.'; }
+      }
+
+      if(longJohns){ 
+        if(longJohns == 10){ setBottom = 'It is freezing out. Layer up with some long johns underneath your pants!'; }
+      }
+      
       
       setClothesMan({
         head: setHead,
         eyes: setEyes,
         neck: setNeck,
-        top: setTop
+        top: setTop,
+        bottom: setBottom
       });
 
       console.log(govWeather);
@@ -338,6 +380,7 @@ export default function Page() {
       <h3>Eyes: { zip === "" ? 'Zip Not Set' : clothesMan.eyes }</h3>
       <h3>Neck: { zip === "" ? 'Zip Not Set' : clothesMan.neck }</h3>
       <h3>Top: { zip === "" ? 'Zip Not Set' : clothesMan.top }</h3>
+      <h3>Bottom: { zip === "" ? 'Zip Not Set' : clothesMan.bottom }</h3>
 
       <h3>Gov Weather This Period Start Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].startTime }</h3>
       <h3>Gov Weather This Period End Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].endTime }</h3>
