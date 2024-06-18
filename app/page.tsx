@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, SyntheticEvent } from 'react';
 import { fetchWeatherData } from '@/app/lib/data';
+import ZipForm from '@/app/ui/zip-form';
 
 export default function Page() {
 
@@ -338,7 +339,7 @@ export default function Page() {
 
   },[govWeather,openWeatherCurrent]);
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     
     e.preventDefault();
 
@@ -351,40 +352,46 @@ export default function Page() {
 
   };
 
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setZip(e.target.value);
+  }
+
   return (
     <main className="font-poppins mx-10">
-      
-      <form onSubmit={handleSubmit}>
-        <label>
-          Zip:
-          <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} />
-        </label>
-        <input type="submit" value="Submit" />
-      </form>
 
-      <p>What Should I Wear Today?</p>
+      <div className="front-page">
 
-      <p>Outside right now</p>
+        <h1>What Should I Wear Today?</h1>
 
-      <h3>Feels Like: { zip === "" ? 'Zip Not Set' : openWeatherCurrent.main.feels_like }</h3>
-      <h3>Temp Rating: { zip === "" ? 'Zip Not Set' : tempRating }</h3>
-      <h3>Humidity Rating: { zip === "" ? 'Zip Not Set' : humidityRating }</h3>
-      <h3>Rain Rating: { zip === "" ? 'Zip Not Set' : rainRating }</h3>
-      <h3>Cloud Rating: { zip === "" ? 'Zip Not Set' : cloudRating }</h3>
-      <h3>Wind Rating: { zip === "" ? 'Zip Not Set' : windRating }</h3>
+        <ZipForm handleSubmit={handleSubmit} zip={zip} handleOnChange={handleOnChange} />
 
-      <p>Outside for a few hours</p>
+      </div>
 
-      <h3>As a man, I would wear:</h3>
-      <h3>Head: { zip === "" ? 'Zip Not Set' : clothesMan.head }</h3>
-      <h3>Eyes: { zip === "" ? 'Zip Not Set' : clothesMan.eyes }</h3>
-      <h3>Neck: { zip === "" ? 'Zip Not Set' : clothesMan.neck }</h3>
-      <h3>Top: { zip === "" ? 'Zip Not Set' : clothesMan.top }</h3>
-      <h3>Bottom: { zip === "" ? 'Zip Not Set' : clothesMan.bottom }</h3>
+      <div className="weather-details">
 
-      <h3>Gov Weather This Period Start Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].startTime }</h3>
-      <h3>Gov Weather This Period End Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].endTime }</h3>
-      <h3>Gov Weather This Period Percent Chance of Rain: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].probabilityOfPrecipitation.value }</h3>
+        <p>Outside right now</p>
+
+        <h3>Feels Like: { zip === "" ? 'Zip Not Set' : openWeatherCurrent.main.feels_like }</h3>
+        <h3>Temp Rating: { zip === "" ? 'Zip Not Set' : tempRating }</h3>
+        <h3>Humidity Rating: { zip === "" ? 'Zip Not Set' : humidityRating }</h3>
+        <h3>Rain Rating: { zip === "" ? 'Zip Not Set' : rainRating }</h3>
+        <h3>Cloud Rating: { zip === "" ? 'Zip Not Set' : cloudRating }</h3>
+        <h3>Wind Rating: { zip === "" ? 'Zip Not Set' : windRating }</h3>
+
+        <p>Outside for a few hours</p>
+
+        <h3>As a man, I would wear:</h3>
+        <h3>Head: { zip === "" ? 'Zip Not Set' : clothesMan.head }</h3>
+        <h3>Eyes: { zip === "" ? 'Zip Not Set' : clothesMan.eyes }</h3>
+        <h3>Neck: { zip === "" ? 'Zip Not Set' : clothesMan.neck }</h3>
+        <h3>Top: { zip === "" ? 'Zip Not Set' : clothesMan.top }</h3>
+        <h3>Bottom: { zip === "" ? 'Zip Not Set' : clothesMan.bottom }</h3>
+
+        <h3>Gov Weather This Period Start Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].startTime }</h3>
+        <h3>Gov Weather This Period End Time: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].endTime }</h3>
+        <h3>Gov Weather This Period Percent Chance of Rain: { zip === "" ? 'Zip Not Set' : govWeather.properties.periods[0].probabilityOfPrecipitation.value }</h3>
+
+      </div>
       
     </main>
   );
